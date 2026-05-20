@@ -52,6 +52,7 @@ function NodeOverlay({ node, onSelect, onAddAfter, onDragStart }) {
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => {
         if (e.button !== 0) return;
         e.stopPropagation();
@@ -153,7 +154,7 @@ export default function DiagramCanvas({
   process,
   zoom,
   onZoomIn, onZoomOut, onZoomReset, onSetZoom,
-  onUpdateNode, onDeleteNode, onAddNode,
+  onUpdateNode, onDeleteNode, onAddNode, onUpdateEdges,
   id = 'diagram-canvas',
 }) {
   const containerRef = useRef(null);
@@ -411,10 +412,13 @@ export default function DiagramCanvas({
           node={selectedNode}
           lanes={process.lanes || []}
           phases={process.phases || []}
+          allNodes={process.nodes || []}
+          edges={process.edges || []}
           position={panelPos}
           onUpdate={(nodeId, updates) => { onUpdateNode(nodeId, updates); setSelectedNode(null); }}
           onDelete={(nodeId)  => { onDeleteNode(nodeId); setSelectedNode(null); }}
           onAddAfter={(nodeId) => { onAddNode(nodeId); setSelectedNode(null); }}
+          onUpdateEdges={onUpdateEdges}
           onClose={() => setSelectedNode(null)}
         />
       )}

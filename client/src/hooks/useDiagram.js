@@ -90,6 +90,36 @@ export function useDiagram() {
 
   // ── CRUD operations on current process ───────────────────────────────────
 
+  /**
+   * updateEdges: receives an array of { from, label, to } changes.
+   * Updates existing edges or creates new ones.
+   */
+  const updateEdges = useCallback((edgeChanges) => {
+    setCurrentProcess(prev => {
+      if (!prev) return prev;
+      let newEdges = [...(prev.edges || [])];
+      edgeChanges.forEach(({ from, label, to }) => {
+        const idx = newEdges.findIndex(e => e.from === from && e.label === label);
+        if (idx >= 0) {
+          newEdges[idx] = { ...newEdges[idx], to };
+        } else {
+          const fromNode = prev.nodes.find(n => n.id === from);
+          const toNode   = prev.nodes.find(n => n.id === to);
+          const crossLane = fromNode?.laneId !== toNode?.laneId;
+          newEdges.push({
+            from, to, label,
+            style: crossLane ? 'dashed' : 'solid',
+            color: fromNode?.color || '#F47920',
+            loop: false,
+          });
+        }
+      });
+      const updated = { ...prev, edges: newEdges };
+      setProcess(updated);
+      return updated;
+    });
+  }, [setProcess]);
+
   const updateNode = useCallback((nodeId, updates) => {
     setCurrentProcess(prev => {
       if (!prev) return prev;
@@ -226,6 +256,6 @@ export function useDiagram() {
     undo, redo,
     canUndo: historyIdx > 0,
     canRedo: historyIdx < history.length - 1,
-    updateNode, deleteNode, addNode,
+    updateNode, deleteNode, addNode, updateEdges,
   };
 }

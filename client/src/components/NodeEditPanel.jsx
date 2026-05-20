@@ -27,9 +27,12 @@ export default function NodeEditPanel({
   node,
   lanes = [],
   phases = [],
+  allNodes = [],
+  edges = [],
   onUpdate,
   onDelete,
   onAddAfter,
+  onUpdateEdges,
   onClose,
   position,
 }) {
@@ -39,6 +42,12 @@ export default function NodeEditPanel({
   const [color,    setColor]    = useState(node.color    || '#0083BE');
   const [laneId,   setLaneId]   = useState(node.laneId   || '');
   const [phaseId,  setPhaseId]  = useState(node.phaseId  || '');
+
+  // Decision branches
+  const siEdge = edges.find(e => e.from === node.id && e.label === 'Sí');
+  const noEdge = edges.find(e => e.from === node.id && e.label === 'No');
+  const [siTarget, setSiTarget] = useState(siEdge?.to || '');
+  const [noTarget, setNoTarget] = useState(noEdge?.to || '');
 
   // Size — initialize from layout dims (node.w / node.h come from positionedNodes)
   const autoW = node.w || 155;
@@ -85,6 +94,13 @@ export default function NodeEditPanel({
       customW: sizeReset ? null : (customW !== autoW ? customW : (node.customW || null)),
       customH: sizeReset ? null : (customH !== autoH ? customH : (node.customH || null)),
     });
+    // Update decision branches
+    if ((type === 'decision' || node.type === 'decision') && onUpdateEdges) {
+      const changes = [];
+      if (siTarget) changes.push({ from: node.id, label: 'Sí', to: siTarget });
+      if (noTarget) changes.push({ from: node.id, label: 'No', to: noTarget });
+      if (changes.length) onUpdateEdges(changes);
+    }
     onClose();
   };
 
@@ -193,6 +209,43 @@ export default function NodeEditPanel({
               >
                 {phases.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
               </select>
+            </div>
+          </div>
+        )}
+
+        {/* ── Decision branches ────────────────────────────────────────────── */}
+        {(type === 'decision' || node.type === 'decision') && allNodes.length > 0 && (
+          <div>
+            <label style={{ fontSize:11, fontWeight:600, color:'#64748b', display:'block', marginBottom:8, fontFamily:'IBM Plex Mono' }}>RAMAS DE DECISIÓN</label>
+            <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+              {[
+                { label:'Sí →', val: siTarget, set: setSiTarget, color:'#16A34A', bg:'#f0fdf4', border:'#bbf7d0' },
+                { label:'No →', val: noTarget, set: setNoTarget, color:'#EF4444', bg:'#fff5f5', border:'#fecaca' },
+              ].map(({ label: lbl, val, set, color, bg, border }) => (
+                <div key={lbl} style={{ display:'flex', alignItems:'center', gap:8, background: bg, border:`1px solid ${border}`, borderRadius:8, padding:'7px 10px' }}>
+                  <span style={{ fontSize:12, fontWeight:700, color, fontFamily:'IBM Plex Mono', minWidth:30 }}>{lbl}</span>
+                  <select
+                    value={val}
+                    onChange={e => set(e.target.value)}
+                    style={{ flex:1, padding:'5px 8px', fontSize:11, border:'1px solid #e2e8f0', borderRadius:7, fontFamily:'IBM Plex Sans', color:'#0f172a', background:'#fff', outline:'none', cursor:'pointer' }}
+                    onFocus={e => e.target.style.borderColor = color}
+                    onBlur={e  => e.target.style.borderColor = '#e2e8f0'}
+                  >
+                    <option value="">— seleccionar nodo destino —</option>
+                    {allNodes
+                      .filter(n => n.id !== node.id)
+                      .map(n => (
+                        <option key={n.id} value={n.id}>
+                          {n.label || `(${n.type})`}
+                        </option>
+                      ))
+                    }
+                  </select>
+                </div>
+              ))}
+              <div style={{ fontSize:10, color:'#94a3b8', fontFamily:'IBM Plex Mono' }}>
+                Selecciona a qué nodo va cada rama al guardar
+              </div>
             </div>
           </div>
         )}

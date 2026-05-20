@@ -21,7 +21,7 @@ export default function App() {
     savedProcesses, saveProcess, loadProcess, deleteProcess, duplicateProcess,
     zoom, zoomIn, zoomOut, zoomReset, setZoom,
     undo, redo, canUndo, canRedo,
-    updateNode, deleteNode, addNode,
+    updateNode, deleteNode, addNode, updateEdges,
   } = useDiagram();
 
   // ── Keyboard shortcuts ────────────────────────────────────────────────────
@@ -216,6 +216,7 @@ export default function App() {
             onUpdateNode={updateNode}
             onDeleteNode={deleteNode}
             onAddNode={addNode}
+            onUpdateEdges={updateEdges}
             id="diagram-canvas"
           />
         </div>
